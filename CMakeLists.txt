@@ -13,7 +13,7 @@ include(cmake/compile_flags.cmake)
 include(cmake/vcpkg.cmake)
 
 if (NOT SKIP_DEPS)
-  add_vcpkg_deps("gtest")
+  add_vcpkg_deps("gtest" "qtbase" "qtdeclarative")
 endif()
 
 add_subdirectory(core)
