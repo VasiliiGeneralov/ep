@@ -18,11 +18,11 @@ endif()
 
 set(VCPKG_DEPS_PREFIX ${VCPKG_ROOT}/installed)
 if (WIN32)
-  #list(APPEND CMAKE_MODULE_PATH ";${VCPKG_DEPS_PREFIX}/x64-windows")
   list(APPEND CMAKE_PREFIX_PATH ";${VCPKG_DEPS_PREFIX}/x64-windows")
 elseif(LINUX)
-  #list(APPEND CMAKE_MODULE_PATH ";${VCPKG_DEPS_PREFIX}/x64-linux")
   list(APPEND CMAKE_PREFIX_PATH ";${VCPKG_DEPS_PREFIX}/x64-linux")
+elseif(APPLE)
+  list(APPEND CMAKE_PREFIX_PATH ";${VCPKG_DEPS_PREFIX}/x64-osx")
 endif()
 
 function(add_vcpkg_deps)
