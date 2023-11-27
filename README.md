@@ -41,7 +41,7 @@ version _older_ than 1.6.
 
 For Debian based distros:
 ```
-sudo apt install libxkbcommon0=1.5.0-1
+sudo apt install libxkbcommon-dev=1.5.0-1
 ```
 
 For Arch based distros:
