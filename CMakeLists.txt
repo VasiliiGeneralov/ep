@@ -13,6 +13,8 @@ include(cmake/compile_flags.cmake)
 include(cmake/vcpkg.cmake)
 
 if (NOT SKIP_DEPS)
+  # remove qtdeclarative once migrated to widgets. qtbase is self sufficient
+  # for widget-based apps
   add_vcpkg_deps("gtest" "qtbase" "qtdeclarative")
 endif()
 
