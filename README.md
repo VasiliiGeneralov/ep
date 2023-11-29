@@ -5,9 +5,9 @@ Editor on patterns.
 # Building from source
 
 1. Get and build [vcpkg](https://github.com/microsoft/vcpkg)
-1. Acquire transitive [dependencies to build Qt from source](#dependencies-to-build-qt-from-source)
-1. The rest is done by `cmake` automatically:
-`cmake -S . -B build/ -G Ninja && cmake --build build/`
+1. Install proper gtest, qt packages using your system manager
+1. ~~Acquire transitive [dependencies to build Qt from source](#dependencies-to-build-qt-from-source)~~
+1. The rest is done by `build.py` automatically
 
 ## Dependencies to build Qt from source
 

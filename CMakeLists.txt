@@ -6,12 +6,12 @@ if(NOT CMAKE_CXX_EXTENSIONS)
   set(CMAKE_CXX_EXTENSIONS OFF)
 endif()
 
-option(EP_UT "Build and run unit tests" ON)
-option(SKIP_DEPS "Skip dependency fetch step" OFF)
+option(UNIT_TESTS "Build and run unit tests" OFF)
+option(VCPKG_DEPS "Use vcpkg to fetch dependencies" OFF)
 
 include(cmake/compile_flags.cmake)
 
-if (NOT SKIP_DEPS)
+if (VCPKG_DEPS)
   include(cmake/vcpkg.cmake)
 
   # in case qt builds from source once again without:
@@ -25,8 +25,6 @@ endif()
 
 add_subdirectory(core)
 
-if(NOT EP_UT)
-  message(STATUS "Unit tests are disabled")
-else()
+if(UNIT_TESTS)
   add_subdirectory(test)
 endif()
