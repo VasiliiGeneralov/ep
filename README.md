@@ -4,51 +4,23 @@ Editor on patterns.
 
 # Building from source
 
-1. Get and build [vcpkg](https://github.com/microsoft/vcpkg)
-1. Install proper gtest, qt packages using your system manager
-1. ~~Acquire transitive [dependencies to build Qt from source](#dependencies-to-build-qt-from-source)~~
+1. Install proper packages using your system manager:
+`qt6-base`/`qt6-base-dev`, `ccache`, `clang` (used by default yet is
+optional, one may specify `-cxx g++` for `build.py` to use `g++` instead),
 1. The rest is done by `build.py` automatically
 
-## Dependencies to build Qt from source
+# Links
 
-For Debian based distros:
-```
-sudo apt install       \
-  libx11-xcb-dev       \
-  libglu1-mesa-dev     \
-  libxrender-dev       \
-  libxi-dev            \
-  libxkbcommon-x11-dev \
-  libwayland-dev
-```
-
-For Arch based distros:
-```
-sudo pacman -Su    \
-  libx11           \
-  mesa             \
-  libxrender       \
-  libxi            \
-  libxkbcommon-x11 \
-  wayland
-```
-
-_Errare humanum est_, latest Qt pulled by vcpkg fails to build with latest
-`libxkbcommon`
-([one](https://www.linuxquestions.org/questions/slackware-14/%5Btrivial%5D-regression-qt5-failed-to-build-with-new-libxkbcommon-1-6-0-a-4175729868/),
-[two](https://bugreports.qt.io/browse/QTBUG-117950)), make sure to install a
-version _older_ than 1.6.
-
-For Debian based distros:
-```
-sudo apt install libxkbcommon-dev=1.5.0-1
-```
-
-For Arch based distros:
-```
-sudo pacman -U \
-https://archive.archlinux.org/packages/l/libxkbcommon/libxkbcommon-1.5.0-1-x86_64.pkg.tar.zst
-```
+1. [Object Trees & Ownership](https://doc.qt.io/qt-6/objecttrees.html)
+1. [Tab Dialog Example](https://doc.qt.io/qt-6/qtwidgets-dialogs-tabdialog-example.html)
+1. [How to Use QPushButton](https://wiki.qt.io/How_to_Use_QPushButton)
+1. [Widgets Tutorial - Creating a Window](https://doc.qt.io/qt-6/qtwidgets-tutorials-widgets-toplevel-example.html)
+1. [Getting started with CMake](https://doc.qt.io/qt-6/cmake-get-started.html)
+1. [Getting Started Programming with Qt Widgets](https://doc.qt.io/qt-6/qtwidgets-tutorials-notepad-example.html)
+1. [QObject Class](https://doc.qt.io/qt-6/qobject.html)
+1. [QPointer Class](https://doc.qt.io/qt-6/qpointer.html)
+1. [Menus Example](https://doc.qt.io/qt-6/qtwidgets-mainwindows-menus-example.html)
+1. [Signals & Slots](https://doc.qt.io/qt-6/signalsandslots.html)
 
 # Reference
 
