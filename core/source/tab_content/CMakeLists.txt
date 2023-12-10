@@ -1,7 +1,8 @@
 add_library(
   tab_content
 
-  ${CMAKE_SOURCE_DIR}/core/include/tab_content/tab_content.hpp
+  tab_builder.cpp
+  ${CMAKE_SOURCE_DIR}/core/include/tab_content/tab_builder.hpp
   )
 
 target_link_libraries(
@@ -10,6 +11,7 @@ target_link_libraries(
   PRIVATE
 
   CompileFlags
+  Qt6::Gui
   Qt6::Widgets
   )
 
