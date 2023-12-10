@@ -1,7 +1,8 @@
 #pragma once
 
-#include "tab_content/tab_content.hpp"
+#include "tab_content/tab_builder.hpp"
 #include <QAction>
+#include <QHash>
 #include <QList>
 #include <QMainWindow>
 #include <QMenu>
@@ -17,6 +18,8 @@ class MainWindow : public QMainWindow {
   // window, therefore main window's and tab manager's lifetimes won't differ in
   // any case
   QTabWidget *tabManager = nullptr;
+
+  QHash<QWidget *, QString> widgetToFilename;
 
   // Q_OBJECT macro in private section is mandatory for any QObject* inheriting
   // class, signals/slots may exhibit weird behavior otherwise
@@ -45,7 +48,7 @@ class MainWindow : public QMainWindow {
 
   void setupTabManager();
 
-  bool saveFile(TabContent *tab);
+  bool saveFile(QWidget *widget);
 
 public:
   ~MainWindow() override = default;
@@ -58,15 +61,20 @@ public:
   }
 
 public slots:
-  void createNewContentTab(const QString &fileName);
-  void populateContentTab(TabContent *tab);
+  // common Qt idiom to inherit and implement necessary signals and slots, yet
+  // official Qt guidelines state, that signals/slots shouldn't use highly
+  // specific interfaces to avoid tight class coupling
+  void createNewContentTab(const QString &fileName, int index = -1);
+  void populateContentTab(TabContentBuilder *builder, int index);
   void closeFile(int index);
   void openFile();
+  void openDir();
   void openGithub();
   void closeAllTabs();
+  void processViewTrigger(QString fileNameToOpen, QWidget *view);
 
 signals:
-  void openFileTriggered(const QString &fileName);
+  void openFileTriggered(const QString &fileName, int index = -1);
 };
 
 } // namespace ep

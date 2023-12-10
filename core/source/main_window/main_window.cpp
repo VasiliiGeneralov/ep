@@ -1,14 +1,17 @@
 #include "main_window/main_window.hpp"
-#include "tab_content/tab_content.hpp"
+#include "tab_content/tab_builder.hpp"
 #include <QAction>
 #include <QDesktopServices>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QList>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QObject>
+#include <QPlainTextEdit>
+#include <QPointer>
 #include <QPushButton>
 #include <QStatusBar>
 #include <QTabWidget>
@@ -23,9 +26,13 @@ QList<QAction *>
 MainWindow::FileMenuActFact::createActions(QMainWindow *parent) const {
   QList<QAction *> actions;
 
-  auto *openAct = new QAction("Open", parent);
-  QObject::connect(openAct, SIGNAL(triggered()), parent, SLOT(openFile()));
-  actions.push_back(openAct);
+  auto *openFileAct = new QAction("Open File", parent);
+  QObject::connect(openFileAct, SIGNAL(triggered()), parent, SLOT(openFile()));
+  actions.push_back(openFileAct);
+
+  auto *openDirAct = new QAction("Open Dir", parent);
+  QObject::connect(openDirAct, SIGNAL(triggered()), parent, SLOT(openDir()));
+  actions.push_back(openDirAct);
 
   auto *closeAct = new QAction("Close All", parent);
   QObject::connect(closeAct, SIGNAL(triggered()), parent, SLOT(closeAllTabs()));
@@ -108,44 +115,63 @@ void MainWindow::openFile() {
   emit openFileTriggered(fileName);
 }
 
-void MainWindow::createNewContentTab(const QString &fileName) {
-  // not specifying a parent, QTabWidget()::addTab() reparents a QWidget pointer
-  auto *tab = new TabContent(nullptr, fileName);
-  connect(tab, &TabContent::contentTabCreated, this,
+// TODO(v.generalov): lame solution, design custom dialog to accept both files
+// and directories
+void MainWindow::openDir() {
+  QString fileName =
+      QFileDialog::getExistingDirectory(this, "Open a directory");
+  emit openFileTriggered(fileName);
+}
+
+void MainWindow::createNewContentTab(const QString &fileName, int index) {
+  TabContentBuilder *builder = nullptr;
+
+  QFileInfo info(fileName);
+  if (info.isDir()) {
+    builder = new FileTreeContentBuilder(this, fileName);
+    connect(builder, SIGNAL(viewTriggered(QString, QWidget *)), this,
+            SLOT(processViewTrigger(QString, QWidget *)));
+  } else if (info.isFile()) {
+    builder = new PlainTextContenBuilder(this, fileName);
+  }
+
+  if (!builder) {
+    return;
+  }
+
+  connect(builder, &TabContentBuilder::builderReady, this,
           &MainWindow::populateContentTab);
-  connect(tab, &QPlainTextEdit::modificationChanged,
-          [tab = tab](bool changed) { tab->setWindowModified(changed); });
-  tabManager->addTab(tab, fileName);
-
-  emit tab->contentTabCreated(tab);
+  emit builder->builderReady(builder, index);
 }
 
-void MainWindow::populateContentTab(TabContent *tab) {
-  // TODO(v.generalov): might be a good place to use the builder pattern
-  QString fileName = tab->getFilename();
-
-  if (fileName.isEmpty()) {
+void MainWindow::populateContentTab(TabContentBuilder *builder, int index) {
+  QWidget *tab = builder->populateTabContent();
+  if (!tab) {
     return;
   }
 
+  QString title = builder->getTitle();
+  widgetToFilename.insert(tab, title);
+
+  if (-1 == index) {
+    int index = tabManager->addTab(tab, title);
+    tabManager->setCurrentIndex(index);
+    return;
+  }
+
+  tabManager->insertTab(index, tab, title);
+  tabManager->setCurrentIndex(index);
+}
+
+bool MainWindow::saveFile(QWidget *widget) {
+  // TODO(v.generalov): quit this dynamic_cast nonsense
+  auto *tab = dynamic_cast<QPlainTextEdit *>(widget);
+  if (!tab) {
+    return true;
+  }
+
+  QString fileName = widgetToFilename.take(tab);
   QFile file(fileName);
-  if (!file.open(QIODevice::ReadOnly | QFile::Text)) {
-    QMessageBox::warning(this, "Warning",
-                         "Cannot open file: " + file.errorString());
-    return;
-  }
-
-  QTextStream iTextStream(&file);
-  QString text = iTextStream.readAll();
-  tab->setPlainText(text);
-
-  // QFile and QTextStream are RAII objects, destructors will close and flush
-  // descriptor and stream automatically, hence no direct QFile::close(),
-  // QTestStram::flush() calls are necessary
-}
-
-bool MainWindow::saveFile(TabContent *tab) {
-  QFile file(tab->getFilename());
 
   if (!file.open(QFile::Text | QFile::WriteOnly)) {
     QMessageBox::warning(this, "Warning",
@@ -161,8 +187,7 @@ bool MainWindow::saveFile(TabContent *tab) {
 }
 
 void MainWindow::closeFile(int index) {
-  // TODO(v.generalov): might be a good place to use the builder pattern
-  auto *tab = dynamic_cast<TabContent *>(tabManager->widget(index));
+  auto *tab = tabManager->widget(index);
   if (!tab) {
     return;
   }
@@ -196,4 +221,10 @@ void MainWindow::closeFile(int index) {
   }
 
   tabManager->removeTab(index);
+}
+
+void MainWindow::processViewTrigger(QString fileNameToOpen, QWidget *view) {
+  int index = tabManager->indexOf(view);
+  tabManager->removeTab(index);
+  createNewContentTab(fileNameToOpen, index);
 }
