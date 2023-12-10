@@ -1,11 +1,13 @@
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
+#include <QApplication>
+#include "main_window/main_window.hpp"
 
-int main(int argc, char **argv) {
-  QGuiApplication app(argc, argv);
-  QQmlApplicationEngine engine;
+int main(int argc, char *argv[]) {
+  QApplication app(argc, argv);
 
-  engine.load(QUrl("gui/main.qml"));
+  auto *window = new ep::MainWindow();
+  window->resize(1280, 720);
+
+  window->show();
 
   return app.exec();
 }

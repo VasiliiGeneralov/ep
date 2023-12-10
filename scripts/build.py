@@ -58,6 +58,24 @@ def parse_args():
         help='Build unit tests. Tests will run automatically after build.',
     )
 
+    ap.add_argument(
+        '-cxx',
+        '--cxx-compiler',
+        type=str,
+        choices={'clang++', 'g++'},
+        default='clang++',
+        help='C++ compiler to use',
+    )
+
+    threads = 4
+    ap.add_argument(
+        '-j',
+        '--jobs',
+        type=int,
+        default=threads,
+        help='Number of threads to use (default: {})'.format(threads),
+    )
+
     return ap.parse_args()
 
 
@@ -87,6 +105,7 @@ if __name__ == '__main__':
 
         cmake_args = [
             'cmake',
+            '-DCMAKE_CXX_COMPILER={}'.format(args.cxx_compiler),
             '-S',
             project_source_path,
             '-B',
@@ -105,7 +124,16 @@ if __name__ == '__main__':
         p = subprocess.Popen(cmake_args)
         p.wait()
 
-        p = subprocess.Popen(['cmake', '--build', project_build_path])
+        p = subprocess.Popen(
+            [
+                'cmake',
+                '--build',
+                project_build_path,
+                '--',
+                '-j',
+                '{}'.format(args.jobs),
+            ]
+        )
         p.wait()
 
     except Exception as exc:

@@ -21,11 +21,13 @@ optional, one may specify `-cxx g++` for `build.py` to use `g++` instead),
 1. [QPointer Class](https://doc.qt.io/qt-6/qpointer.html)
 1. [Menus Example](https://doc.qt.io/qt-6/qtwidgets-mainwindows-menus-example.html)
 1. [Signals & Slots](https://doc.qt.io/qt-6/signalsandslots.html)
+1. [Container Classes](https://doc.qt.io/qt-6/containers.html)
 
 # Reference
 
 1. "Design Patterns: Elements of Reusable Object-Oriented Software",
 Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides
+1. [Official Qt Widget documentation](https://doc.qt.io/qt-6/qtwidgets-index.html)
 1. [Qt Quick Controls - Text Editor](https://code.qt.io/cgit/qt/qtdeclarative.git/tree/examples/quickcontrols/texteditor)
 1. [File System Explorer](https://code.qt.io/cgit/qt/qtdeclarative.git/tree/examples/quickcontrols/filesystemexplorer)
 1. [Kate](https://github.com/KDE/kate)
