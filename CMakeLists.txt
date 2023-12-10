@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.22)
 
 project(ep VERSION 0.0 LANGUAGES CXX)
 
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+endif()
+
 if(NOT CMAKE_CXX_EXTENSIONS)
   set(CMAKE_CXX_EXTENSIONS OFF)
 endif()
@@ -18,9 +23,7 @@ if (VCPKG_DEPS)
   #   /usr/bin/ld: fcxml.c:(...):      undefined reference to `XML_...'
   #   /usr/bin/ld: fcfreetype.c:(...): undefined reference to `FT_....'
   #
-  # remove qtdeclarative once migrated to widgets. qtbase is self sufficient
-  # for widget-based apps
-  add_vcpkg_deps("gtest" "qtbase" "qtdeclarative")
+  add_vcpkg_deps("gtest" "qtbase")
 endif()
 
 add_subdirectory(core)
