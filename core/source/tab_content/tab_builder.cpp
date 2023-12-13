@@ -21,6 +21,8 @@ QWidget *FileTreeContentBuilder::populateTabContent() {
   connect(view, &QTreeView::doubleClicked, this,
           &FileTreeContentBuilder::checkIfFileTriggered);
 
+  emit widgetCreated(view);
+
   return view;
 }
 
@@ -33,7 +35,7 @@ void FileTreeContentBuilder::checkIfFileTriggered(const QModelIndex &index) {
   emit viewTriggered(info.absoluteFilePath(), view);
 }
 
-QWidget *PlainTextContenBuilder::populateTabContent() {
+QWidget *PlainTextContentBuilder::populateTabContent() {
   QFile file(getFilename());
 
   if (!file.open(QIODevice::ReadOnly | QFile::Text)) {
@@ -51,6 +53,8 @@ QWidget *PlainTextContenBuilder::populateTabContent() {
 
   connect(tab, &QPlainTextEdit::modificationChanged,
           [tab = tab](bool changed) { tab->setWindowModified(changed); });
+
+  emit widgetCreated(tab);
 
   return tab;
 
