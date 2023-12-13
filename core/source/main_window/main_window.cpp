@@ -18,6 +18,7 @@
 #include <QTextEdit>
 #include <QUrl>
 #include <QWidget>
+#include <algorithm>
 #include <cassert>
 
 using namespace ep;
@@ -104,43 +105,47 @@ void MainWindow::setupTabManager() {
 
   setCentralWidget(tabManager);
 
-  connect(this, &MainWindow::openFileTriggered, this,
+  connect(this, &MainWindow::openTriggered, this,
           &MainWindow::createNewContentTab);
   connect(tabManager, &QTabWidget::tabCloseRequested, this,
           &MainWindow::closeFile);
 }
 
 void MainWindow::openFile() {
-  QString fileName = QFileDialog::getOpenFileName(this, "Open the file");
-  emit openFileTriggered(fileName);
+  auto *wrapper = new PlainTextContentWrapper(this);
+  contentWrappers.push_back(wrapper);
+
+  bool res = wrapper->createHandler()->open(this);
+  if (!res) {
+    return;
+  }
+
+  emit openTriggered(wrapper);
 }
 
 // TODO(v.generalov): lame solution, design custom dialog to accept both files
 // and directories
 void MainWindow::openDir() {
-  QString fileName =
-      QFileDialog::getExistingDirectory(this, "Open a directory");
-  emit openFileTriggered(fileName);
+  // TODO(v.generalov): these two are clearly repeated, come up with something
+  // to avoid error prone repetition
+  auto *wrapper = new FileTreeViewContentWrapper(this);
+  contentWrappers.push_back(wrapper);
+
+  bool res = wrapper->createHandler()->open(this);
+  if (!res) {
+    return;
+  }
+
+  emit openTriggered(wrapper);
 }
 
-void MainWindow::createNewContentTab(const QString &fileName, int index) {
-  TabContentBuilder *builder = nullptr;
-
-  QFileInfo info(fileName);
-  if (info.isDir()) {
-    builder = new FileTreeContentBuilder(this, fileName);
-    connect(builder, SIGNAL(viewTriggered(QString, QWidget *)), this,
-            SLOT(processViewTrigger(QString, QWidget *)));
-  } else if (info.isFile()) {
-    builder = new PlainTextContenBuilder(this, fileName);
-  }
+void MainWindow::createNewContentTab(TabContentWrapper *wrapper, int index) {
+  TabContentBuilder *builder = wrapper->createBuilder(this);
 
   if (!builder) {
     return;
   }
 
-  connect(builder, &TabContentBuilder::builderReady, this,
-          &MainWindow::populateContentTab);
   emit builder->builderReady(builder, index);
 }
 
@@ -151,80 +156,59 @@ void MainWindow::populateContentTab(TabContentBuilder *builder, int index) {
   }
 
   QString title = builder->getTitle();
-  widgetToFilename.insert(tab, title);
 
   if (-1 == index) {
-    int index = tabManager->addTab(tab, title);
-    tabManager->setCurrentIndex(index);
-    return;
+    index = tabManager->addTab(tab, title);
+  } else {
+    tabManager->insertTab(index, tab, title);
   }
 
-  tabManager->insertTab(index, tab, title);
   tabManager->setCurrentIndex(index);
 }
 
-bool MainWindow::saveFile(QWidget *widget) {
-  // TODO(v.generalov): quit this dynamic_cast nonsense
-  auto *tab = dynamic_cast<QPlainTextEdit *>(widget);
-  if (!tab) {
-    return true;
-  }
+TabContentWrapper *MainWindow::getWrapperByWidget(QWidget *widget) {
+  auto it = std::find_if(std::begin(contentWrappers), std::end(contentWrappers),
+                         [widget = widget](TabContentWrapper *wrapper) {
+                           return wrapper->getQWidget() == widget;
+                         });
 
-  QString fileName = widgetToFilename.take(tab);
-  QFile file(fileName);
+  assert(it != std::end(contentWrappers) && "Failed to determine wrapper!");
 
-  if (!file.open(QFile::Text | QFile::WriteOnly)) {
-    QMessageBox::warning(this, "Warning",
-                         "Cannot open file: " + file.errorString());
-    return false;
-  }
+  return *it;
+}
 
-  file.resize(0);
-  QTextStream oTextStream(&file);
-  oTextStream << tab->toPlainText();
-
-  return true;
+void MainWindow::closeTab(int index) {
+  TabContentWrapper *wrapper = getWrapperByWidget(tabManager->widget(index));
+  auto it = std::find(std::begin(contentWrappers), std::end(contentWrappers),
+                      wrapper);
+  assert(it != std::end(contentWrappers) && "Bad tab close!");
+  contentWrappers.erase(it);
+  tabManager->removeTab(index);
 }
 
 void MainWindow::closeFile(int index) {
-  auto *tab = tabManager->widget(index);
+  QWidget *tab = tabManager->widget(index);
   if (!tab) {
     return;
   }
 
-  int ret = QMessageBox::Discard;
-  if (tab->isWindowModified()) {
-    QMessageBox mBox(
-        QMessageBox::Icon::Warning, "File is modified", "Keep changes?",
-        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, this);
-
-    ret = mBox.exec();
-  }
-
-  bool status = true;
-  switch (ret) {
-  case QMessageBox::Save:
-    status = saveFile(tab);
-    break;
-  case QMessageBox::Discard:
-    // no action required before closing
-    break;
-  case QMessageBox::Cancel:
-    [[fallthrough]];
-  default:
-    // either canceled or unknown return code, do nothing
+  TabContentWrapper *wrapper = getWrapperByWidget(tab);
+  bool res = wrapper->createHandler()->close(this);
+  if (!res) {
     return;
   }
 
-  if (!status) {
-    return;
-  }
-
-  tabManager->removeTab(index);
+  closeTab(index);
 }
 
 void MainWindow::processViewTrigger(QString fileNameToOpen, QWidget *view) {
   int index = tabManager->indexOf(view);
-  tabManager->removeTab(index);
-  createNewContentTab(fileNameToOpen, index);
+  closeTab(index);
+  // TODO(v.generalov): it's shortsighted to treat all opened files as plain
+  // text
+  auto *wrapper = new PlainTextContentWrapper(this);
+  contentWrappers.push_back(wrapper);
+
+  wrapper->setFilename(fileNameToOpen);
+  emit openTriggered(wrapper, index);
 }

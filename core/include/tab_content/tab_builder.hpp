@@ -4,6 +4,7 @@
 #include <QFileSystemModel>
 #include <QModelIndex>
 #include <QObject>
+#include <QPlainTextEdit>
 #include <QString>
 #include <QTabWidget>
 #include <QTreeView>
@@ -30,15 +31,18 @@ signals:
   void builderReady(TabContentBuilder *builder, int index);
 };
 
-class PlainTextContenBuilder : public TabContentBuilder {
+class PlainTextContentBuilder : public TabContentBuilder {
   Q_OBJECT
 
 public:
-  explicit PlainTextContenBuilder(QObject *parent, const QString &fileName)
+  explicit PlainTextContentBuilder(QObject *parent, const QString &fileName)
       : TabContentBuilder(parent, fileName) {}
-  ~PlainTextContenBuilder() override = default;
+  ~PlainTextContentBuilder() override = default;
 
   QWidget *populateTabContent() override;
+
+signals:
+  void widgetCreated(QPlainTextEdit *widget);
 };
 
 class FileTreeContentBuilder : public TabContentBuilder {
@@ -60,6 +64,7 @@ public slots:
 
 signals:
   void viewTriggered(QString fileNameToOpen, QWidget *view);
+  void widgetCreated(QTreeView *widget);
 };
 
 } // namespace ep
