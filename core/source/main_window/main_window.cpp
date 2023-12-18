@@ -181,7 +181,10 @@ void MainWindow::closeTab(int index) {
   TabContentWrapper *wrapper = getWrapperByWidget(tabManager->widget(index));
   auto it = std::find(std::begin(contentWrappers), std::end(contentWrappers),
                       wrapper);
+
   assert(it != std::end(contentWrappers) && "Bad tab close!");
+  delete *it;
+
   contentWrappers.erase(it);
   tabManager->removeTab(index);
 }
